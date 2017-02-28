@@ -2,6 +2,19 @@
     /*
      * 演示结果
      */
+    let obj = {
+        a: 1,
+        b: 2,
+        c: {
+            d: 3,
+            e: 4
+        }
+    }
+
+    let app0 = new Observer(obj);
+    app0.data.c.d;
+    app0.data.c.e = 5;
+
     let app1 = new Observer({
         name: 'youngwind',
         age: 25
@@ -61,7 +74,7 @@
         this.convert = function convert(obj) {
 
             for (let key in obj) {
-                if (typeof obj[key] === 'Object') {
+                if (typeof obj[key] === 'object') {
                     convert(obj[key]); //递归
                 }
 
@@ -75,9 +88,8 @@
                             convert(this.value); //递归
                         }
 
-                        self.$emit(key,value);
+                        self.$emit(key, value);
                         //值改变时，触发事件
-
                     },
                     get: function() {
                         if (!this.value) this.value = initVal; //初始化值

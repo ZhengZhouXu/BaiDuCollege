@@ -1,0 +1,62 @@
+<script>
+    let obj = {
+        a: 1,
+        b: 2,
+        c: {
+            d: 3,
+            e: 4
+        }
+    }
+
+    let app0 = new Observer(obj);
+    app0.data.c.d;
+    app0.data.c.e = 5;
+
+    let app1 = new Observer({
+        name: 'youngwind',
+        age: 25
+    });
+
+    app1.data.name = {
+        lastName: 'liang',
+        firstName: 'shaofeng'
+    };
+
+    app1.data.name.lastName;
+    // 这里还需要输出 '你访问了 lastName '
+    app1.data.name.firstName = 'lalala';
+    // 这里还需要输出 '你设置了firstName, 新的值为 lalala'
+
+    //通过proxy去实现
+    function Observer(obj) {
+        this.data = (function convert(conObj) {
+            //let self = this;
+            for (var key in conObj) {
+                if (typeof conObj[key] === 'object') {
+                    conObj[key] = convert(conObj[key]);
+                }
+            }
+
+            return new Proxy(conObj, {
+                set: function(targer, key, value) {
+
+                    if (typeof value === 'object') {
+                        value = convert(value);
+                    } else {
+                        console.log(`你设置了 ${key}，新的值为${value}`);
+                    }
+
+                    Reflect.set(targer, key, value);
+                },
+                get: function(targer, key) {
+
+                    if (typeof targer[key] === 'object') {
+                        return targer[key];
+                    }
+                    console.log(`你访问了 ${key}`);
+                    return Reflect.get(targer, key);
+                }
+            });
+        })(obj);
+    }
+</script>
