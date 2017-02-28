@@ -1,0 +1,94 @@
+<script>
+    /*
+     * 演示结果
+     */
+    let app1 = new Observer({
+        name: 'youngwind',
+        age: 25
+    });
+
+    app1.data.name = {
+        lastName: 'liang',
+        firstName: 'shaofeng'
+    };
+
+    app1.data.name.lastName;
+    // 这里还需要输出 '你访问了 lastName '
+    app1.data.name.firstName = 'lalala';
+    // 这里还需要输出 '你设置了firstName, 新的值为 lalala'
+
+    let app2 = new Observer({
+        name: 'youngwind',
+        age: 25
+    });
+
+    // 你需要实现 $watch 这个 API
+    app2.$watch('age', function(age) {
+        console.log(`我的年纪变了，现在已经是：${age}岁了`)
+    });
+
+    app2.data.age = 100; // 输出：'我的年纪变了，现在已经是100岁了'
+
+    /*
+     * 方法主体
+     */
+    function Observer(obj) {
+        this.data = {};
+        Object.assign(this.data, obj); //深拷贝
+        let self = this; //指定this
+
+        //处理事件
+        this.handlers = {}; //存储事件
+        this.$watch = function(eventName, callback) {
+            if (!(eventName in this.handlers)) { //事件名不存在与类表中
+                this.handlers[eventName] = [];
+            }
+
+            this.handlers[eventName].push(callback);
+        }
+
+        //触发
+        this.$emit = function() {
+            let eventName = arguments[0];
+            let params = Array.prototype.slice.apply(arguments, [1]);
+            if (eventName in this.handlers)
+                for (callback of this.handlers[eventName])
+                    callback(params);
+        }
+
+        /* 对特定对象的特定键添加getter，setter
+         */
+        this.convert = function convert(obj) {
+
+            for (let key in obj) {
+                if (typeof obj[key] === 'Object') {
+                    convert(obj[key]); //递归
+                }
+
+                let initVal = obj[key]; //默认值
+                Object.defineProperty(obj, key, {
+                    set: function(value) {
+                        this.value = value;
+                        console.log("你设置了 " + key + ",新的值为 " + value);
+
+                        if (typeof this.value === 'object') {
+                            convert(this.value); //递归
+                        }
+
+                        self.$emit(key,value);
+                        //值改变时，触发事件
+
+                    },
+                    get: function() {
+                        if (!this.value) this.value = initVal; //初始化值
+                        if (typeof this.value !== 'object') console.log("你访问了 " + key);
+                        return this.value;
+                    },
+                });
+            }
+        }
+
+        //调用
+        this.convert(this.data);
+    }
+</script>
